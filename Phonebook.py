@@ -1,4 +1,6 @@
-import time
+import tkinter as tk
+from tkinter import messagebox, simpledialog
+from tkinter import ttk
 
 # Define a contact class
 class Contact:
@@ -15,115 +17,128 @@ class Phonebook:
     def __init__(self):
         self.contacts = []
 
-    # Insert a contact
     def insert_contact(self, name, phone, email=""):
         new_contact = Contact(name, phone, email)
         self.contacts.append(new_contact)
-        print(f"Contact {name} added successfully!")
 
-    # Search contact by name or phone
     def search_contact(self, query):
-        results = [contact for contact in self.contacts if query in contact.name or query in contact.phone]
-        return results
+        return [contact for contact in self.contacts if query.lower() in contact.name.lower() or query in contact.phone]
 
-    # Display all contacts
-    def display_contacts(self):
-        if not self.contacts:
-            print("No contacts available.")
-        else:
-            for contact in self.contacts:
-                print(contact)
-
-    # Delete a contact by name or phone
     def delete_contact(self, query):
-        self.contacts = [contact for contact in self.contacts if query not in contact.name and query not in contact.phone]
-        print(f"Contact {query} deleted successfully!")
+        self.contacts = [contact for contact in self.contacts if query.lower() not in contact.name.lower() and query not in contact.phone]
 
-    # Update an existing contact's details
     def update_contact(self, old_query, new_name, new_phone, new_email=""):
-        updated = False
         for contact in self.contacts:
-            if old_query in contact.name or old_query in contact.phone:
+            if old_query.lower() in contact.name.lower() or old_query in contact.phone:
                 contact.name = new_name
                 contact.phone = new_phone
                 contact.email = new_email
-                updated = True
-                print(f"Contact {old_query} updated successfully!")
-        if not updated:
-            print(f"Contact {old_query} not found.")
+                return True
+        return False
 
-    # Sort contacts by name
     def sort_contacts(self):
         self.contacts.sort(key=lambda contact: contact.name)
-        print("Contacts sorted by name!")
 
-    # Analyze search efficiency (time complexity)
-    def analyze_search_efficiency(self, query):
-        start_time = time.time()
-        results = self.search_contact(query)
-        end_time = time.time()
-        search_time = end_time - start_time
-        print(f"Search took {search_time:.6f} seconds.")
-        print(f"Time complexity is O(n) since we are doing a linear search.")
-        if results:
-            print(f"Found {len(results)} contact(s).")
+    def display_contacts(self):
+        return "\n".join([str(contact) for contact in self.contacts])
+
+# GUI application with styling and colors
+class PhonebookApp:
+    def __init__(self, root):
+        self.phonebook = Phonebook()
+        self.root = root
+        self.root.title("Phonebook Application")
+        self.root.geometry("400x500")
+        self.root.configure(bg="#2c3e50")  # Dark blue-gray background color
+
+        # Style definitions
+        style = ttk.Style()
+        style.configure("TButton", font=("Helvetica", 12), padding=10)
+        style.configure("TLabel", background="#A9A9A9", font=("Arial", 14), foreground="white")
+
+        # Header Label
+        self.label = tk.Label(root, text="Phonebook Application", font=("Arial", 18), bg="#3498db", fg="white", pady=10)
+        self.label.pack(fill=tk.X)
+
+        # Buttons with background colors
+        self.btn_insert = tk.Button(root, text="Insert Contact", command=self.insert_contact, bg="#3498db", fg="white", font=("Helvetica", 12))
+        self.btn_insert.pack(pady=10, ipadx=23, ipady=5)
+
+        self.btn_search = tk.Button(root, text="Search Contact", command=self.search_contact, bg="#3498db", fg="white", font=("Helvetica", 12))
+        self.btn_search.pack(pady=10, ipadx=15, ipady=5)
+
+        self.btn_display = tk.Button(root, text="Display Contacts", command=self.display_contacts, bg="#3498db", fg="white", font=("Helvetica", 12))
+        self.btn_display.pack(pady=10, ipadx=10, ipady=5)
+
+        self.btn_delete = tk.Button(root, text="Delete Contact", command=self.delete_contact, bg="#3498db", fg="white", font=("Helvetica", 12))
+        self.btn_delete.pack(pady=10, ipadx=18, ipady=5)
+
+        self.btn_update = tk.Button(root, text="Update Contact", command=self.update_contact, bg="#3498db", fg="white", font=("Helvetica", 12))
+        self.btn_update.pack(pady=10, ipadx=18, ipady=5)
+
+        self.btn_sort = tk.Button(root, text="Sort Contacts", command=self.sort_contacts, bg="#3498db", fg="white", font=("Helvetica", 12))
+        self.btn_sort.pack(pady=10, ipadx=25, ipady=5)
+
+        # Adding a footer
+        self.footer = tk.Label(root, text="© 2024 Phonebook App", font=("Arial", 10), bg="#2c3e50", fg="white")
+        self.footer.pack(side=tk.BOTTOM, pady=20)
+
+    def insert_contact(self):
+        name = simpledialog.askstring("Insert Contact", "Enter contact name:")
+        phone = simpledialog.askstring("Insert Contact", "Enter contact phone:")
+        email = simpledialog.askstring("Insert Contact", "Enter contact email (optional):")
+        if name and phone:
+            self.phonebook.insert_contact(name, phone, email)
+            messagebox.showinfo("Success", f"Contact '{name}' added!")
         else:
-            print("No contacts found.")
+            messagebox.showwarning("Input Error", "Name and Phone are required!")
 
-
-# Main program logic
-def main():
-    phonebook = Phonebook()
-
-    while True:
-        print("\nPhonebook Application:")
-        print("1. Insert Contact")
-        print("2. Search Contact")
-        print("3. Display Contacts")
-        print("4. Delete Contact")
-        print("5. Update Contact")
-        print("6. Sort Contacts")
-        print("7. Analyze Search Efficiency")
-        print("8. Exit")
-
-        choice = input("Choose an option (1-8): ")
-
-        if choice == "1":
-            name = input("Enter contact name: ")
-            phone = input("Enter contact phone: ")
-            email = input("Enter contact email (optional): ")
-            phonebook.insert_contact(name, phone, email)
-        elif choice == "2":
-            query = input("Enter name or phone to search: ")
-            results = phonebook.search_contact(query)
+    def search_contact(self):
+        query = simpledialog.askstring("Search Contact", "Enter name or phone to search:")
+        if query:
+            results = self.phonebook.search_contact(query)
             if results:
-                print("Search Results:")
-                for result in results:
-                    print(result)
+                messagebox.showinfo("Search Results", "\n".join([str(contact) for contact in results]))
             else:
-                print("No contacts found.")
-        elif choice == "3":
-            print("All Contacts:")
-            phonebook.display_contacts()
-        elif choice == "4":
-            query = input("Enter name or phone to delete: ")
-            phonebook.delete_contact(query)
-        elif choice == "5":
-            old_query = input("Enter name or phone to update: ")
-            new_name = input("Enter new name: ")
-            new_phone = input("Enter new phone: ")
-            new_email = input("Enter new email (optional): ")
-            phonebook.update_contact(old_query, new_name, new_phone, new_email)
-        elif choice == "6":
-            phonebook.sort_contacts()
-        elif choice == "7":
-            query = input("Enter name or phone to search and analyze efficiency: ")
-            phonebook.analyze_search_efficiency(query)
-        elif choice == "8":
-            print("Exiting Phonebook Application.")
-            break
+                messagebox.showinfo("No Results", "No contacts found.")
         else:
-            print("Invalid choice. Please try again.")
+            messagebox.showwarning("Input Error", "Please enter a search query.")
 
+    def display_contacts(self):
+        contacts = self.phonebook.display_contacts()
+        if contacts:
+            messagebox.showinfo("All Contacts", contacts)
+        else:
+            messagebox.showinfo("No Contacts", "No contacts to display.")
+
+    def delete_contact(self):
+        query = simpledialog.askstring("Delete Contact", "Enter name or phone to delete:")
+        if query:
+            self.phonebook.delete_contact(query)
+            messagebox.showinfo("Success", f"Contact '{query}' deleted (if it existed).")
+        else:
+            messagebox.showwarning("Input Error", "Please enter a name or phone number.")
+
+    def update_contact(self):
+        old_query = simpledialog.askstring("Update Contact", "Enter name or phone to update:")
+        if old_query:
+            new_name = simpledialog.askstring("Update Contact", "Enter new name:")
+            new_phone = simpledialog.askstring("Update Contact", "Enter new phone:")
+            new_email = simpledialog.askstring("Update Contact", "Enter new email (optional):")
+            if self.phonebook.update_contact(old_query, new_name, new_phone, new_email):
+                messagebox.showinfo("Success", f"Contact '{old_query}' updated!")
+            else:
+                messagebox.showwarning("Not Found", f"Contact '{old_query}' not found.")
+        else:
+            messagebox.showwarning("Input Error", "Please enter a name or phone number.")
+
+    def sort_contacts(self):
+        self.phonebook.sort_contacts()
+        messagebox.showinfo("Sorted", "Contacts sorted by name!")
+
+
+# Main application entry point
 if __name__ == "__main__":
-    main()
+    root = tk.Tk()
+    app = PhonebookApp(root)
+    root.mainloop()
